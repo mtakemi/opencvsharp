@@ -18,8 +18,7 @@ Package Manager → **+** → **Add package from git URL...**
 https://github.com/mtakemi/opencvsharp.git?path=/unity#4.x-unity-android
 ```
 
-For local development, use **Add package from disk...** and select `unity/package.json`
-(after running `build_unity_package.sh`, see below).
+For local development, use **Add package from disk...** and select `unity/package.json`.
 
 ## Texture conversion
 
@@ -59,7 +58,8 @@ Package Manager → OpenCvSharp (Android) → **Samples** → Import, then add t
 
 ## Building the binaries
 
-Binaries are not committed yet. From the repository root:
+The binaries in `Runtime/Plugins/` are committed so that the package can be installed from the git URL.
+To rebuild them, run from the repository root:
 
 ```bash
 ANDROID_NDK_HOME=/path/to/android-ndk-r27c ./build_android.sh   # libOpenCvSharpExtern.so
