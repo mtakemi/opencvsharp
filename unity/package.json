@@ -1,0 +1,36 @@
+{
+  "name": "com.mtakemi.opencvsharp",
+  "version": "4.13.0-preview.2",
+  "displayName": "OpenCvSharp (Android)",
+  "description": "OpenCvSharp (OpenCV 4.13.0 wrapper for .NET) for Unity. Supports Android arm64-v8a (IL2CPP) and the Windows x64 Editor.",
+  "unity": "2022.3",
+  "license": "Apache-2.0",
+  "keywords": [
+    "opencv",
+    "opencvsharp",
+    "computer-vision",
+    "aruco",
+    "qrcode",
+    "android"
+  ],
+  "author": {
+    "name": "mtakemi",
+    "url": "https://github.com/mtakemi/opencvsharp"
+  },
+  "documentationUrl": "https://github.com/mtakemi/opencvsharp/tree/4.x-unity-android/unity",
+  "dependencies": {
+    "com.unity.ugui": "1.0.0"
+  },
+  "samples": [
+    {
+      "displayName": "Smoke Test",
+      "description": "Runs basic checks (CvtColor, exceptions, codecs, ArUco + SolvePnP, QR, Texture2D <-> Mat) and shows the results on screen.",
+      "path": "Samples~/SmokeTest"
+    },
+    {
+      "displayName": "Camera Detection",
+      "description": "Detects ArUco markers (distance via SolvePnP) and QR codes in the WebCamTexture image and shows the result in a uGUI RawImage.",
+      "path": "Samples~/CameraDetection"
+    }
+  ]
+}
