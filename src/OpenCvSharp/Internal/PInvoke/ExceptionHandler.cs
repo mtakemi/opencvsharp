@@ -20,8 +20,12 @@ public static class ExceptionHandler
     /// Callback function invoked by OpenCV when exception occurs 
     /// Stores the information locally for every thread
     /// </summary>
-    public static readonly CvErrorCallback ErrorHandlerCallback =
-        delegate (ErrorCode status, string funcName, string errMsg, string fileName, int line, IntPtr userData)
+    public static readonly CvErrorCallback ErrorHandlerCallback = OnError;
+
+    // Must be a static method marked with [MonoPInvokeCallback]: AOT runtimes such as
+    // Unity IL2CPP cannot marshal delegates to anonymous/instance methods into native code.
+    [MonoPInvokeCallback(typeof(CvErrorCallback))]
+    private static int OnError(ErrorCode status, string funcName, string errMsg, string fileName, int line, IntPtr userData)
         {
             try
             {
@@ -36,7 +40,7 @@ public static class ExceptionHandler
                 localLine.Value = line;
                 localFuncName.Value = funcName;
             }
-        };
+        }
 
     /// <summary>
     /// Registers the callback function to OpenCV, so exception caught before the p/invoke boundary 

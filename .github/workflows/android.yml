@@ -1,0 +1,82 @@
+﻿name: Android
+
+on:
+  pull_request:
+    types: [synchronize, opened]
+  push:
+    branches:
+      - main
+      - 4.x-unity-android
+  workflow_dispatch:
+
+env:
+  OPENCV_VERSION: 4.13.0
+  NDK_VERSION: r27c
+  ANDROID_API_LEVEL: 23
+  CACHE_VERSION: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [arm64-v8a]
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install Ninja
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends ninja-build
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: ${{ env.NDK_VERSION }}
+          add-to-path: false
+
+      - name: Restore OpenCV cache
+        id: opencv-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ github.workspace }}/build_android/${{ matrix.abi }}/opencv_install
+          key: opencv-android-v${{ env.CACHE_VERSION }}-${{ env.OPENCV_VERSION }}-${{ env.NDK_VERSION }}-${{ env.ANDROID_API_LEVEL }}-${{ matrix.abi }}-${{ hashFiles('cmake/opencv_build_options_android.cmake') }}
+
+      - name: Build
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: ./build_android.sh ${{ matrix.abi }}
+
+      - name: Save OpenCV cache
+        if: steps.opencv-cache.outputs.cache-hit != 'true' && github.event_name == 'push'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ github.workspace }}/build_android/${{ matrix.abi }}/opencv_install
+          key: opencv-android-v${{ env.CACHE_VERSION }}-${{ env.OPENCV_VERSION }}-${{ env.NDK_VERSION }}-${{ env.ANDROID_API_LEVEL }}-${{ matrix.abi }}-${{ hashFiles('cmake/opencv_build_options_android.cmake') }}
+
+      - name: Check libOpenCvSharpExtern.so
+        env:
+          NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+        run: |
+          so=build_android/${{ matrix.abi }}/libOpenCvSharpExtern.so
+          bin=$(echo $NDK/toolchains/llvm/prebuilt/*/bin)
+          echo "--- NEEDED"
+          $bin/llvm-readelf -d $so | grep NEEDED
+          echo "--- LOAD alignment (must be 0x4000 or larger)"
+          $bin/llvm-readelf -lW $so | grep LOAD
+          if $bin/llvm-readelf -lW $so | grep LOAD | awk '{print $NF}' | grep -qvE '^0x(4000|8000|10000)$'; then
+            echo "LOAD segment is not 16 KB aligned"; exit 1
+          fi
+          echo "--- exported symbol check"
+          $bin/llvm-nm -D --defined-only $so | grep -w core_Mat_sizeof
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: libOpenCvSharpExtern-android-${{ matrix.abi }}
+          path: build_android/${{ matrix.abi }}/libOpenCvSharpExtern.so

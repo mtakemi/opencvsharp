@@ -71,7 +71,9 @@ public static partial class NativeMethods
             return;
         }
 
-        if (IsUnix())
+        // Every non-Windows platform (Linux, macOS, Android, ...) uses the native try/catch
+        // + thread-local error callback; the Windows path below relies on Win32 LoadLibrary.
+        if (IsUnix() || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
 #if DOTNETCORE
             ExceptionHandler.RegisterExceptionCallback();
